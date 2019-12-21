@@ -1,6 +1,8 @@
 module Main exposing (..)
 
-import Html exposing (div, text)
+import Html exposing (div, text, p)
+import Svg exposing (..)
+import Svg.Attributes exposing (..)
 
 
 -- MODEL
@@ -49,12 +51,34 @@ update msg model =
 
 -- VIEW
 
+makeRectangle : JeopardyAnswer -> Svg msg
+makeRectangle answer =
+  rect [ x (toString (200 * answer.file))
+        , y (toString (150 * answer.rank))
+        , width "200"
+        , height "150"
+        , fill "blue"
+        , stroke "black"
+        , strokeWidth "3"
+        ] []
+
+
+gameBoard : Model -> Html.Html msg
+gameBoard model =
+  svg
+    [ viewBox "0 0 2000 1200"
+    , width "2000"
+    , height "1200"
+    ] 
+    (List.map makeRectangle model.answers)
+
 
 view model =
     div []
-        [ text (toString model)
+        [ (gameBoard model)
+        , p [] []
+        , Html.text (toString model)
         ]
-
 
 
 -- MAIN
