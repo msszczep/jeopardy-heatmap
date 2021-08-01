@@ -43,19 +43,17 @@ update msg model =
 setColor : Response -> String
 setColor response =
   case response of
-    Correct -> "green"
+    Correct -> "#12E603"
     Incorrect -> "red"
     _ -> "blue"
 
 view : Model -> Html Msg
 view model =
   div []
-    [ button [ onClick SetCorrect ] [ Html.text "Yes" ]
-    , button [ onClick SetIncorrect ] [ Html.text "No" ]
-    , svg [
-    viewBox "0 0 400 400"
-    , width "400"
-    , height "400"
+    [ svg [
+    viewBox "0 0 200 200"
+    , width "200"
+    , height "200"
     ] [rect
         [ x "0"
         , y "0"
@@ -66,6 +64,5 @@ view model =
         , strokeWidth "2"
         ]
         []]
-     ]
-
-
+    , button [ onClick SetCorrect ] [ Html.text "Yes" ]
+    , button [ onClick SetIncorrect ] [ Html.text "No" ]]
