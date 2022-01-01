@@ -1,7 +1,10 @@
 module Main exposing (..)
 
 import Browser
-import Html exposing (div, text, p)
+import Html exposing (div, text, p, button)
+import Html.Events exposing (onClick)
+import Html.Attributes exposing (style)
+import Dict exposing (Dict)
 import Svg exposing (..)
 import Svg.Attributes exposing (..)
 import String exposing (fromInt)
@@ -11,22 +14,21 @@ import String exposing (fromInt)
 
 type AnswerStatus = Unread | Correct | Incorrect
 
-type alias JeopardyAnswer =
-    { id : Int
-    , status : AnswerStatus
-    }
-
-type alias Model = List JeopardyAnswer
-
-
--- initModel : Model
-initModel =
-    List.map (\x -> JeopardyAnswer x Unread) (List.range 1 30)
+initModel = Dict.fromList (List.map (\e -> Tuple.pair e Unread) (List.range 1 6))
 
 -- UPDATE
 
+type Msg
+  = SetCorrect Int
+  | SetIncorrect Int
+
+
 update msg model =
-  model
+  case msg of
+    SetCorrect n ->
+      Dict.update n (Maybe.map (\x -> Correct)) model
+    SetIncorrect n ->
+      Dict.update n (Maybe.map (\x -> Incorrect)) model
 
 -- VIEW
 
@@ -57,36 +59,32 @@ getColor : AnswerStatus -> String
 getColor s =
   case s of
     Unread -> "blue"
-    Correct -> "green"
+    Correct -> "#52D017"
     Incorrect -> "red"
 
-makeRectangle : JeopardyAnswer -> Svg msg
+-- makeRectangle : JeopardyAnswer -> Svg msg
 makeRectangle answer =
-  rect [ x (fromInt (getXCoord answer.id))
-        , y (fromInt (getYCoord answer.id))
-        , width "140"
-        , height "100"
-        , fill (getColor answer.status)
-        , stroke "black"
-        , strokeWidth "2"
-        ] []
+  div [ Html.Attributes.style "margin-left" "10px"
+      , Html.Attributes.style "margin-top" (String.concat [(fromInt (getYCoord (Tuple.first answer))), "px"])
+      , Html.Attributes.style "float" "left"
+      , Html.Attributes.style "width" "140px"
+      , Html.Attributes.style "height" "100px"
+      , Html.Attributes.style "background-color" (getColor (Tuple.second answer))
+      , Html.Attributes.style "border" "2px solid black"
+      ]
+      [Html.text " ",
+       button [ onClick (SetCorrect (Tuple.first answer))] [ Html.text "Yes" ],
+      Html.text " ",
+      button [ onClick (SetIncorrect (Tuple.first answer))] [ Html.text "No" ]]
 
-
-gameBoard : Model -> Html.Html msg
+--gameBoard : Model -> Html.Html msg
 gameBoard model =
-  svg
-    [ viewBox "0 0 2000 1200"
-    , width "2000"
-    , height "1200"
-    ] 
-    (List.map makeRectangle model)
+  List.map makeRectangle (Dict.toList model)
 
 
 view model =
     div []
-        [ (gameBoard model)
-        , p [] []
-        ]
+        (gameBoard model)
 
 
 -- MAIN
