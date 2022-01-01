@@ -1,7 +1,7 @@
 module Main exposing (..)
 
 import Browser
-import Html exposing (div, text, p, button)
+import Html exposing (div, text, p, br, button)
 import Html.Events exposing (onClick)
 import Html.Attributes exposing (style)
 import Dict exposing (Dict)
@@ -11,7 +11,7 @@ import String exposing (fromInt)
 
 type AnswerStatus = Unread | Correct | Incorrect
 
-initModel = Dict.fromList (List.map (\e -> Tuple.pair e Unread) (List.range 1 30))
+initModel = Dict.fromList <| List.map (\e -> Tuple.pair e Unread) <| List.range 1 30
 
 -- UPDATE
 
@@ -48,14 +48,26 @@ makeRectangle answer =
       Html.text " ",
       button [ onClick (SetIncorrect (Tuple.first answer))] [ Html.text "No" ]]
 
+stats : Dict Int AnswerStatus -> List (Html.Html Msg)
+stats model =
+  let
+    correct = Dict.values model |> List.filter (\e -> e == Correct) |> List.length
+    incorrect = Dict.values model |> List.filter (\e -> e == Incorrect) |> List.length
+    unread = Dict.values model |> List.filter (\e -> e == Unread) |> List.length
+  in
+    [text <| " Correct: " ++ (fromInt correct) ++ " | Incorrect: " ++ (fromInt incorrect) ++ " | Unread: " ++ (fromInt unread)]
+
 view : Dict Int AnswerStatus -> Html.Html Msg
 view model =
-      div [ Html.Attributes.style "display" "grid"
+      div []
+      [ p [] (stats model)
+      , div [ Html.Attributes.style "display" "grid"
         , Html.Attributes.style "grid-template-columns" "auto auto auto auto auto auto"
         , Html.Attributes.style "padding" "10px"
         , Html.Attributes.style "width" "80%"
         ]
         (List.map makeRectangle (Dict.toList model))
+      ]
 
 -- MAIN
 
