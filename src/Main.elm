@@ -1,37 +1,25 @@
 module Main exposing (..)
 
 import Browser
-import Html exposing (Html, button, div, text)
+import Dict exposing (Dict)
+import Html exposing (br, button, div, p, text)
+import Html.Attributes exposing (style)
 import Html.Events exposing (onClick)
-import Svg exposing (..)
-import Svg.Attributes exposing (..)
-
-
-
--- MAIN
-
-
-main =
-    Browser.sandbox { init = init, update = update, view = view }
+import String exposing (fromInt)
 
 
 
 -- MODEL
 
 
-type Response
-    = Correct
+type AnswerStatus
+    = Unread
+    | Correct
     | Incorrect
-    | Unanswered
 
 
-type alias Model =
-    { content : Response }
-
-
-init : Model
-init =
-    { content = Unanswered }
+initModel =
+    Dict.fromList <| List.map (\e -> Tuple.pair e Unread) <| List.range 1 30
 
 
 
@@ -39,56 +27,88 @@ init =
 
 
 type Msg
-    = SetCorrect
-    | SetIncorrect
+    = SetCorrect Int
+    | SetIncorrect Int
 
 
-update : Msg -> Model -> Model
+update : Msg -> Dict Int AnswerStatus -> Dict Int AnswerStatus
 update msg model =
     case msg of
-        SetCorrect ->
-            { model | content = Correct }
+        SetCorrect n ->
+            Dict.update n (Maybe.map (\x -> Correct)) model
 
-        SetIncorrect ->
-            { model | content = Incorrect }
+        SetIncorrect n ->
+            Dict.update n (Maybe.map (\x -> Incorrect)) model
 
 
 
 -- VIEW
 
 
-setColor : Response -> String
-setColor response =
-    case response of
+getColor : AnswerStatus -> String
+getColor s =
+    case s of
+        Unread ->
+            "blue"
+
         Correct ->
-            "#12E603"
+            "#52D017"
 
         Incorrect ->
             "red"
 
-        _ ->
-            "blue"
+
+makeRectangle : ( Int, AnswerStatus ) -> Html.Html Msg
+makeRectangle answer =
+    div
+        [ Html.Attributes.style "width" "140px"
+        , Html.Attributes.style "height" "100px"
+        , Html.Attributes.style "margin-top" "10px"
+        , Html.Attributes.style "background-color" (getColor (Tuple.second answer))
+        , Html.Attributes.style "border" "2px solid black"
+        ]
+        [ button [ onClick (SetCorrect (Tuple.first answer)) ] [ Html.text "Yes" ]
+        , Html.text " "
+        , button [ onClick (SetIncorrect (Tuple.first answer)) ] [ Html.text "No" ]
+        ]
 
 
-view : Model -> Html Msg
+stats : Dict Int AnswerStatus -> List (Html.Html Msg)
+stats model =
+    let
+        correct =
+            Dict.values model |> List.filter (\e -> e == Correct) |> List.length
+
+        incorrect =
+            Dict.values model |> List.filter (\e -> e == Incorrect) |> List.length
+
+        unread =
+            Dict.values model |> List.filter (\e -> e == Unread) |> List.length
+    in
+    [ text <| " Correct: " ++ fromInt correct ++ " | Incorrect: " ++ fromInt incorrect ++ " | Unread: " ++ fromInt unread ]
+
+
+view : Dict Int AnswerStatus -> Html.Html Msg
 view model =
     div []
-        [ svg
-            [ viewBox "0 0 200 200"
-            , width "200"
-            , height "200"
+        [ p [] (stats model)
+        , div
+            [ Html.Attributes.style "display" "grid"
+            , Html.Attributes.style "grid-template-columns" "auto auto auto auto auto auto"
+            , Html.Attributes.style "padding" "10px"
+            , Html.Attributes.style "width" "80%"
             ]
-            [ rect
-                [ x "0"
-                , y "0"
-                , width "100"
-                , height "100"
-                , fill (setColor model.content)
-                , stroke "black"
-                , strokeWidth "2"
-                ]
-                []
-            ]
-        , button [ onClick SetCorrect ] [ Html.text "Yes" ]
-        , button [ onClick SetIncorrect ] [ Html.text "No" ]
+            (List.map makeRectangle (Dict.toList model))
         ]
+
+
+
+-- MAIN
+
+
+main =
+    Browser.sandbox
+        { init = initModel
+        , update = update
+        , view = view
+        }
