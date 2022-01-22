@@ -5,7 +5,6 @@ import Dict exposing (Dict)
 import Html exposing (br, button, div, p, text, h3, a)
 import Html.Attributes exposing (style, href)
 import Html.Events exposing (onClick)
-import Markdown exposing (toHtml)
 import String exposing (fromInt)
 
 
