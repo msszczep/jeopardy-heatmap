@@ -1,6 +1,5 @@
 # jeopardy-heatmap
-No-frills heatmap for tracking and scoring Jeopardy!
 
-Click yes if you got the response correct, no if you didn't.
+This is a no-frills scoreboard to track an individual's response rate for a Jeopardy! round.
 
-Totals are tallied in real time at the top of the page. 
+http://www.szcz.org/jeopardyheatmap.html 
