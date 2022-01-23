@@ -2,8 +2,8 @@ module Main exposing (..)
 
 import Browser
 import Dict exposing (Dict)
-import Html exposing (br, button, div, p, text, h3, a)
-import Html.Attributes exposing (style, href)
+import Html exposing (a, br, button, div, h3, p, table, td, text, tr)
+import Html.Attributes exposing (href, style)
 import Html.Events exposing (onClick)
 import String exposing (fromInt)
 
@@ -38,10 +38,12 @@ update msg model =
         SetCorrect n ->
             Dict.update n (Maybe.map (\x -> Correct)) model
 
-        SetIncorrect n ->            Dict.update n (Maybe.map (\x -> Incorrect)) model
+        SetIncorrect n ->
+            Dict.update n (Maybe.map (\x -> Incorrect)) model
 
         SetUnread n ->
             Dict.update n (Maybe.map (\x -> Unread)) model
+
 
 
 -- VIEW
@@ -63,13 +65,13 @@ getColor s =
 makeRectangle : ( Int, AnswerStatus ) -> Html.Html Msg
 makeRectangle answer =
     div
-        [ Html.Attributes.style "width" "140px"
-        , Html.Attributes.style "height" "100px"
-        , Html.Attributes.style "margin-top" "10px"
-        , Html.Attributes.style "padding-top" "5px"
-        , Html.Attributes.style "padding-left" "5px"
-        , Html.Attributes.style "background-color" (getColor (Tuple.second answer))
-        , Html.Attributes.style "border" "2px solid black"
+        [ style "width" "140px"
+        , style "height" "100px"
+        , style "margin-top" "10px"
+        , style "padding-top" "5px"
+        , style "padding-left" "5px"
+        , style "background-color" (getColor (Tuple.second answer))
+        , style "border" "2px solid black"
         ]
         [ button [ onClick (SetCorrect (Tuple.first answer)) ] [ Html.text "Yes" ]
         , Html.text " "
@@ -79,35 +81,48 @@ makeRectangle answer =
         ]
 
 
+getAnswerCount : Dict Int AnswerStatus -> AnswerStatus -> Int
+getAnswerCount model a =
+    Dict.values model |> List.filter (\e -> e == a) |> List.length
+
+
 stats : Dict Int AnswerStatus -> List (Html.Html Msg)
 stats model =
     let
         correct =
-            Dict.values model |> List.filter (\e -> e == Correct) |> List.length
+            getAnswerCount model Correct
 
         incorrect =
-            Dict.values model |> List.filter (\e -> e == Incorrect) |> List.length
+            getAnswerCount model Incorrect
 
         unread =
-            Dict.values model |> List.filter (\e -> e == Unread) |> List.length
+            getAnswerCount model Unread
     in
     [ text <| " Correct: " ++ fromInt correct ++ " | Incorrect: " ++ fromInt incorrect ++ " | Unread: " ++ fromInt unread ]
 
 
 view : Dict Int AnswerStatus -> Html.Html Msg
 view model =
-    div [ Html.Attributes.style "padding" "10px" ]
-        [ h3 [] [text "Jeopardy! Heatmap"]
-        , p [Html.Attributes.style "font-size" "12px"] [text "This is a no-frills scoreboard to track an individual's response rate for a Jeopardy! round.  Simply click \"Yes\" for a given answer if you're correct; click \"No\" otherwise.  The color of each square is updated to reflect its response status, and your tally is tracked below as you update.  To reset the entire board, simply refresh the page."]
-        , a [href "https://github.com/msszczep/jeopardy-heatmap/"] [text "Source code is here."]
-        , p [] (stats model)
-        , div
-            [ Html.Attributes.style "display" "grid"
-            , Html.Attributes.style "grid-template-columns" "auto auto auto auto auto auto"
-            , Html.Attributes.style "padding" "10px"
-            , Html.Attributes.style "width" "80%"
+    div [ style "padding" "10px" ]
+        [ h3 [] [ text "Jeopardy! Heatmap" ]
+        , p [ style "font-size" "14px" ]
+            [ text "This is a no-frills scoreboard to track an individual's response rate for a Jeopardy! round.  Simply click \"Yes\" for a given answer if you're correct; click \"No\" otherwise.  The color of each square is updated to reflect its response status, and your tally is tracked below as you update.  To reset the entire board, simply refresh the page.  "
+            , a [ href "https://github.com/msszczep/jeopardy-heatmap/" ] [ text "Source code is here." ]
             ]
-            (List.map makeRectangle (Dict.toList model))
+        , table []
+            [ tr []
+                [ td [] [ div [] (stats model) ]
+                , td []
+                    [ div
+                        [ style "display" "grid"
+                        , style "grid-template-columns" "auto auto auto auto auto auto"
+                        , style "padding" "10px"
+                        , style "width" "80%"
+                        ]
+                        (List.map makeRectangle (Dict.toList model))
+                    ]
+                ]
+            ]
         ]
 
 
@@ -121,6 +136,3 @@ main =
         , update = update
         , view = view
         }
-
-
-
