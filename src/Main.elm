@@ -9,6 +9,7 @@ import String exposing (fromInt)
 import Tuple exposing (first, second)
 
 
+
 -- MODEL
 
 
@@ -93,10 +94,12 @@ getNumberStyleList a =
     , style "text-align" "center"
     ]
 
+
 getVerbiageStyleList =
     [ style "font-weight" "bold"
     , style "padding-top" "10px"
     ]
+
 
 stats : Dict Int AnswerStatus -> List (Html.Html Msg)
 stats model =
@@ -110,11 +113,11 @@ stats model =
         unread =
             getAnswerCount model Unread
     in
-    [ div (getVerbiageStyleList) [ text "Correct:" ]
+    [ div getVerbiageStyleList [ text "Correct:" ]
     , div (getNumberStyleList Correct) [ text <| fromInt correct ]
-    , div (getVerbiageStyleList) [ text "Incorrect:" ]
+    , div getVerbiageStyleList [ text "Incorrect:" ]
     , div (getNumberStyleList Incorrect) [ text <| fromInt incorrect ]
-    , div (getVerbiageStyleList) [ text "Unread:" ]
+    , div getVerbiageStyleList [ text "Unread:" ]
     , div (getNumberStyleList Unread) [ text <| fromInt unread ]
     ]
 
