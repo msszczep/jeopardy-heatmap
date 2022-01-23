@@ -86,6 +86,13 @@ getAnswerCount model a =
     Dict.values model |> List.filter (\e -> e == a) |> List.length
 
 
+getStyleList : AnswerStatus -> List (Html.Attribute msg)
+getStyleList a =
+  [style "font-size" "500%"
+  , style "color" (getColor a)
+  , style "text-align" "center"
+  ]
+
 stats : Dict Int AnswerStatus -> List (Html.Html Msg)
 stats model =
     let
@@ -98,7 +105,13 @@ stats model =
         unread =
             getAnswerCount model Unread
     in
-    [ text <| " Correct: " ++ fromInt correct ++ " | Incorrect: " ++ fromInt incorrect ++ " | Unread: " ++ fromInt unread ]
+    [ div [] [text "Correct:"]
+    , div (getStyleList Correct) [text <| fromInt correct]
+    , div [] [text "Incorrect:"]
+    , div (getStyleList Incorrect) [text <| fromInt incorrect]
+    , div [] [text "Unread:"]
+    , div (getStyleList Unread) [text <| fromInt unread]
+    ]
 
 
 view : Dict Int AnswerStatus -> Html.Html Msg
@@ -111,13 +124,13 @@ view model =
             ]
         , table []
             [ tr []
-                [ td [] [ div [] (stats model) ]
-                , td []
+                [ td [style "vertical-align" "top",
+                      style "width" "20%"] [ div [] (stats model) ]
+                , td [style "width" "80%"]
                     [ div
                         [ style "display" "grid"
                         , style "grid-template-columns" "auto auto auto auto auto auto"
                         , style "padding" "10px"
-                        , style "width" "80%"
                         ]
                         (List.map makeRectangle (Dict.toList model))
                     ]

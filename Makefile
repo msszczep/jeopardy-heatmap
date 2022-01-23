@@ -1,3 +1,3 @@
 compile:
-	elm make src/Main.elm
-	mv index.html jeopardyheatmap.html
+	elm make --optimize --output=jeopardyheatmap.html src/Main.elm
+
