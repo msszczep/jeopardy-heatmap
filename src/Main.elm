@@ -6,7 +6,7 @@ import Html exposing (a, br, button, div, h3, p, table, td, text, tr)
 import Html.Attributes exposing (href, style)
 import Html.Events exposing (onClick)
 import String exposing (fromInt)
-
+import Tuple exposing (first, second)
 
 
 -- MODEL
@@ -70,14 +70,14 @@ makeRectangle answer =
         , style "margin-top" "10px"
         , style "padding-top" "5px"
         , style "padding-left" "5px"
-        , style "background-color" (getColor (Tuple.second answer))
+        , style "background-color" (getColor (second answer))
         , style "border" "2px solid black"
         ]
-        [ button [ onClick (SetCorrect (Tuple.first answer)) ] [ Html.text "Yes" ]
+        [ button [ onClick (SetCorrect (first answer)) ] [ text "Yes" ]
         , Html.text " "
-        , button [ onClick (SetIncorrect (Tuple.first answer)) ] [ Html.text "No" ]
+        , button [ onClick (SetIncorrect (first answer)) ] [ text "No" ]
         , Html.text " "
-        , button [ onClick (SetUnread (Tuple.first answer)) ] [ Html.text "Reset" ]
+        , button [ onClick (SetUnread (first answer)) ] [ text "Reset" ]
         ]
 
 
@@ -86,12 +86,17 @@ getAnswerCount model a =
     Dict.values model |> List.filter (\e -> e == a) |> List.length
 
 
-getStyleList : AnswerStatus -> List (Html.Attribute msg)
-getStyleList a =
-  [style "font-size" "500%"
-  , style "color" (getColor a)
-  , style "text-align" "center"
-  ]
+getNumberStyleList : AnswerStatus -> List (Html.Attribute msg)
+getNumberStyleList a =
+    [ style "font-size" "500%"
+    , style "color" (getColor a)
+    , style "text-align" "center"
+    ]
+
+getVerbiageStyleList =
+    [ style "font-weight" "bold"
+    , style "padding-top" "10px"
+    ]
 
 stats : Dict Int AnswerStatus -> List (Html.Html Msg)
 stats model =
@@ -105,12 +110,12 @@ stats model =
         unread =
             getAnswerCount model Unread
     in
-    [ div [] [text "Correct:"]
-    , div (getStyleList Correct) [text <| fromInt correct]
-    , div [] [text "Incorrect:"]
-    , div (getStyleList Incorrect) [text <| fromInt incorrect]
-    , div [] [text "Unread:"]
-    , div (getStyleList Unread) [text <| fromInt unread]
+    [ div (getVerbiageStyleList) [ text "Correct:" ]
+    , div (getNumberStyleList Correct) [ text <| fromInt correct ]
+    , div (getVerbiageStyleList) [ text "Incorrect:" ]
+    , div (getNumberStyleList Incorrect) [ text <| fromInt incorrect ]
+    , div (getVerbiageStyleList) [ text "Unread:" ]
+    , div (getNumberStyleList Unread) [ text <| fromInt unread ]
     ]
 
 
@@ -124,9 +129,13 @@ view model =
             ]
         , table []
             [ tr []
-                [ td [style "vertical-align" "top",
-                      style "width" "20%"] [ div [] (stats model) ]
-                , td [style "width" "80%"]
+                [ td
+                    [ style "vertical-align" "top"
+                    , style "width" "20%"
+                    , style "padding-top" "15px"
+                    ]
+                    [ div [] (stats model) ]
+                , td [ style "width" "80%" ]
                     [ div
                         [ style "display" "grid"
                         , style "grid-template-columns" "auto auto auto auto auto auto"
