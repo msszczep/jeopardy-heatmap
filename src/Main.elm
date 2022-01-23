@@ -6,7 +6,7 @@ import Html exposing (a, br, button, div, h3, p, table, td, text, tr)
 import Html.Attributes exposing (href, style)
 import Html.Events exposing (onClick)
 import String exposing (fromInt)
-import Tuple exposing (first, second)
+import Tuple exposing (first, pair, second)
 
 
 
@@ -20,7 +20,7 @@ type AnswerStatus
 
 
 initModel =
-    Dict.fromList <| List.map (\e -> Tuple.pair e Unread) <| List.range 1 30
+    Dict.fromList <| List.map (\e -> pair e Unread) <| List.range 1 30
 
 
 
@@ -35,15 +35,19 @@ type Msg
 
 update : Msg -> Dict Int AnswerStatus -> Dict Int AnswerStatus
 update msg model =
+    let
+        applyUpdate n a m =
+            Dict.update n (Maybe.map (\x -> a)) m
+    in
     case msg of
         SetCorrect n ->
-            Dict.update n (Maybe.map (\x -> Correct)) model
+            applyUpdate n Correct model
 
         SetIncorrect n ->
-            Dict.update n (Maybe.map (\x -> Incorrect)) model
+            applyUpdate n Incorrect model
 
         SetUnread n ->
-            Dict.update n (Maybe.map (\x -> Unread)) model
+            applyUpdate n Unread model
 
 
 
@@ -74,11 +78,11 @@ makeRectangle answer =
         , style "background-color" (getColor (second answer))
         , style "border" "2px solid black"
         ]
-        [ button [ onClick (SetCorrect (first answer)) ] [ text "Yes" ]
+        [ button [ onClick (SetCorrect <| first answer) ] [ text "Yes" ]
         , Html.text " "
-        , button [ onClick (SetIncorrect (first answer)) ] [ text "No" ]
+        , button [ onClick (SetIncorrect <| first answer) ] [ text "No" ]
         , Html.text " "
-        , button [ onClick (SetUnread (first answer)) ] [ text "Reset" ]
+        , button [ onClick (SetUnread <| first answer) ] [ text "Reset" ]
         ]
 
 
