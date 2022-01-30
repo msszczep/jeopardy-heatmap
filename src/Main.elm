@@ -99,6 +99,7 @@ getNumberStyleList a =
     ]
 
 
+getVerbiageStyleList : List (Html.Attribute msg)
 getVerbiageStyleList =
     [ style "font-weight" "bold"
     , style "padding-top" "10px"
