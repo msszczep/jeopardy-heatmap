@@ -91,6 +91,16 @@ getAnswerCount model a =
     Dict.values model |> List.filter (\e -> e == a) |> List.length
 
 
+getRedZoneCorrectCount : Dict Int AnswerStatus -> Int
+getRedZoneCorrectCount model =
+    model
+        |> Dict.toList
+        |> List.filter (\e -> first e > 12)
+        |> List.map second
+        |> List.filter (\e -> e == Correct)
+        |> List.length
+
+
 getNumberStyleList : AnswerStatus -> List (Html.Attribute msg)
 getNumberStyleList a =
     [ style "font-size" "500%"
@@ -117,6 +127,9 @@ stats model =
 
         unread =
             getAnswerCount model Unread
+
+        rzc =
+            getRedZoneCorrectCount model
     in
     [ div getVerbiageStyleList [ text "Correct:" ]
     , div (getNumberStyleList Correct) [ text <| fromInt correct ]
@@ -124,6 +137,8 @@ stats model =
     , div (getNumberStyleList Incorrect) [ text <| fromInt incorrect ]
     , div getVerbiageStyleList [ text "Unread:" ]
     , div (getNumberStyleList Unread) [ text <| fromInt unread ]
+    , div getVerbiageStyleList [ text "Red Zone Correct:" ]
+    , div (getNumberStyleList Correct) [ text <| fromInt rzc ]
     ]
 
 
