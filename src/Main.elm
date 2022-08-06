@@ -1,14 +1,18 @@
 module Main exposing (..)
 
 import Browser
+import Debug exposing (toString)
 import Dict exposing (Dict)
-import Html exposing (a, br, button, div, h3, p, table, td, text, tr)
-import Html.Attributes exposing (href, style)
+import Html exposing (a, b, br, button, div, h3, p, table, td, text, th, tr)
+import Html.Attributes exposing (colspan, href, style)
 import Html.Events exposing (onClick)
 import String exposing (fromInt)
 import Tuple exposing (first, pair, second)
 
 
+-- TODO:
+-- * Track Daily Doubles
+-- * Make copyable results for social media, a la Wordle
 
 -- MODEL
 
@@ -18,11 +22,20 @@ type AnswerStatus
     | Correct
     | Incorrect
 
+type RoundStatus
+    = Jeopardy
+    | DoubleJeopardy
+    | FinalJeopardy
+    | Total
 
+type alias Model =
+    { answers: Dict Int AnswerStatus
+    , round: RoundStatus
+    }
+
+initModel : Model
 initModel =
-    Dict.fromList <| List.map (\e -> pair e Unread) <| List.range 1 30
-
-
+    Model (Dict.fromList <| List.map (\e -> pair e Unread) <| List.range 1 61) Jeopardy
 
 -- UPDATE
 
@@ -31,13 +44,14 @@ type Msg
     = SetCorrect Int
     | SetIncorrect Int
     | SetUnread Int
+    | SetRound RoundStatus
 
-
-update : Msg -> Dict Int AnswerStatus -> Dict Int AnswerStatus
+update : Msg -> Model -> Model
 update msg model =
     let
         applyUpdate n a m =
-            Dict.update n (Maybe.map (\x -> a)) m
+            { model | answers = Dict.update n (Maybe.map (\x -> a)) m.answers }
+
     in
     case msg of
         SetCorrect n ->
@@ -49,7 +63,8 @@ update msg model =
         SetUnread n ->
             applyUpdate n Unread model
 
-
+        SetRound r ->
+            { model | round = r }
 
 -- VIEW
 
@@ -85,11 +100,39 @@ makeRectangle answer =
         , button [ onClick (SetUnread <| first answer) ] [ text "Reset" ]
         ]
 
+showRound : Model -> Html.Html Msg
+showRound m =
+     let
+        answersToUse =
+           if m.round == Jeopardy
+                     then List.take 30 (Dict.toList m.answers)
+           else if m.round == DoubleJeopardy
+              then List.drop 30 (Dict.toList m.answers) |> List.take 30
+           else
+              List.drop 60 (Dict.toList m.answers)
+     in
+     div
+       [ style "display" "grid"
+                        , style "grid-template-columns" "auto auto auto auto auto auto"
+                        , style "padding" "10px"
+                        ]
 
-getAnswerCount : Dict Int AnswerStatus -> AnswerStatus -> Int
-getAnswerCount model a =
-    Dict.values model |> List.filter (\e -> e == a) |> List.length
+       (List.map makeRectangle answersToUse)
 
+getAnswerCount : Dict Int AnswerStatus -> AnswerStatus -> RoundStatus -> String.String
+getAnswerCount model a r =
+    let
+        roundStatusMax = if r == Jeopardy then 31 else 61
+        roundStatusMin = if r == Jeopardy then 0 else 30
+    in
+        model
+            |> Dict.toList
+            |> List.filter (\e -> first e < roundStatusMax)
+            |> List.filter (\e -> first e > roundStatusMin)
+            |> List.map second
+            |> List.filter (\e -> e == a)
+            |> List.length
+            |> String.fromInt
 
 getRedZoneCorrectCount : Dict Int AnswerStatus -> Int
 getRedZoneCorrectCount model =
@@ -103,11 +146,23 @@ getRedZoneCorrectCount model =
 
 getNumberStyleList : AnswerStatus -> List (Html.Attribute msg)
 getNumberStyleList a =
-    [ style "font-size" "500%"
+    [ style "font-size" "250%"
     , style "color" (getColor a)
     , style "text-align" "center"
     ]
 
+
+showCurrentRoundName : RoundStatus -> Html.Html msg
+showCurrentRoundName r =
+    let
+      t = if r == Jeopardy
+              then " - Round: Jeopardy!"
+          else if r == DoubleJeopardy
+              then " - Round: Double Jeopardy!"
+          else
+              " - Round: Final Jeopardy!"
+    in
+      b [] [text t]
 
 getVerbiageStyleList : List (Html.Attribute msg)
 getVerbiageStyleList =
@@ -116,55 +171,86 @@ getVerbiageStyleList =
     ]
 
 
-stats : Dict Int AnswerStatus -> List (Html.Html Msg)
-stats model =
-    let
-        correct =
-            getAnswerCount model Correct
+sumJandDj : String.String -> String.String -> String.String
+sumJandDj j dj =
+    (String.toInt j |> Maybe.withDefault 0) +
+    (String.toInt dj |> Maybe.withDefault 0)
+     |> String.fromInt
 
-        incorrect =
-            getAnswerCount model Incorrect
+newStats : Dict Int AnswerStatus -> Html.Html Msg
+newStats answers =
+   let
+       jcorrect = getAnswerCount answers Correct Jeopardy
+       djcorrect = getAnswerCount answers Correct DoubleJeopardy
+       totalcorrect = sumJandDj jcorrect djcorrect
+       jwrong = getAnswerCount answers Incorrect Jeopardy
+       djwrong = getAnswerCount answers Incorrect DoubleJeopardy
+       totalwrong = sumJandDj jwrong djwrong
+       junread = getAnswerCount answers Unread Jeopardy
+       djunread = getAnswerCount answers Unread DoubleJeopardy
+       totalunread = sumJandDj junread djunread
+   in
+       table [
+         style "text-align" "center"
+         , style "width" "100%"
+       ] [
+          tr [] [
+            th [style "width" "33%"] [text "J!"]
+            , th [style "width" "33%"] [text "DJ!"]
+            , th [style "width" "33%"] [text "Total"]
+          ] ,
+          tr [] [
+            td [style "padding-top" "30px", colspan 3] [text "Correct"]
+          ] ,
+          tr [] [
+            td (getNumberStyleList Correct) [text jcorrect]
+            , td (getNumberStyleList Correct) [text djcorrect]
+            , td (getNumberStyleList Correct) [text totalcorrect]
+          ] ,
+          tr [] [
+            td [style "padding-top" "30px", colspan 3] [text "Incorrect"]
+          ] ,
+          tr [] [
+            td (getNumberStyleList Incorrect) [text jwrong]
+            , td (getNumberStyleList Incorrect) [text djwrong]
+            , td (getNumberStyleList Incorrect) [text totalwrong]
+          ] ,
+          tr [] [
+            td [style "padding-top" "30px", colspan 3] [text "Unread"]
+          ] ,
+          tr [] [
+            td (getNumberStyleList Unread) [text junread]
+            , td (getNumberStyleList Unread) [text djunread]
+            , td (getNumberStyleList Unread) [text totalunread]
+          ]
+       ]
 
-        unread =
-            getAnswerCount model Unread
-
-        rzc =
-            getRedZoneCorrectCount model
-    in
-    [ div getVerbiageStyleList [ text "Correct:" ]
-    , div (getNumberStyleList Correct) [ text <| fromInt correct ]
-    , div getVerbiageStyleList [ text "Incorrect:" ]
-    , div (getNumberStyleList Incorrect) [ text <| fromInt incorrect ]
-    , div getVerbiageStyleList [ text "Unread:" ]
-    , div (getNumberStyleList Unread) [ text <| fromInt unread ]
-    , div getVerbiageStyleList [ text "Red Zone Correct:" ]
-    , div (getNumberStyleList Correct) [ text <| fromInt rzc ]
-    ]
-
-
-view : Dict Int AnswerStatus -> Html.Html Msg
+view : Model -> Html.Html Msg
 view model =
     div [ style "padding" "10px" ]
         [ h3 [] [ text "Jeopardy! Heatmap" ]
         , p [ style "font-size" "14px" ]
-            [ text "This is a no-frills scoreboard to track an individual's response rate for a Jeopardy! round.  Simply click \"Yes\" for a given answer if you're correct; click \"No\" otherwise.  The color of each square is updated to reflect its response status, and your tally is tracked below as you update.  To reset the entire board, simply refresh the page.  "
+            [ text "This is a no-frills scoreboard to track an individual's response rate for a Jeopardy! game.  Simply click \"Yes\" for a given answer if you're correct; click \"No\" otherwise.  The color of each square is updated to reflect its response status, and your tally is tracked below as you update.  To reset the entire game, simply refresh the page.  "
             , a [ href "https://github.com/msszczep/jeopardy-heatmap/" ] [ text "Source code is here." ]
             ]
         , table []
             [ tr []
                 [ td
                     [ style "vertical-align" "top"
-                    , style "width" "20%"
+                    , style "width" "26%"
                     , style "padding-top" "15px"
                     ]
-                    [ div [] (stats model) ]
+                    [ div [
+                      style "text-align" "center"
+                    ] [(newStats model.answers)]]
                 , td [ style "width" "80%" ]
-                    [ div
-                        [ style "display" "grid"
-                        , style "grid-template-columns" "auto auto auto auto auto auto"
-                        , style "padding" "10px"
-                        ]
-                        (List.map makeRectangle (Dict.toList model))
+                    [ button [onClick (SetRound Jeopardy) ] [text "Jeopardy!"]
+                    , Html.text " "
+                    , button [onClick (SetRound DoubleJeopardy) ] [text "Double Jeopardy!"]
+                    , Html.text " "
+                    , button [onClick (SetRound FinalJeopardy) ] [text "Final Jeopardy!"]
+                    , (showCurrentRoundName model.round)
+                    , showRound model
                     ]
                 ]
             ]
@@ -173,7 +259,6 @@ view model =
 
 
 -- MAIN
-
 
 main =
     Browser.sandbox
