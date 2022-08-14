@@ -12,7 +12,7 @@ import Tuple exposing (first, pair, second)
 
 -- TODO:
 -- * Track Daily Doubles
--- * Make copyable results for social media, a la Wordle
+-- * Make copyable results for social media, a la Wordle : red, green and blue square emojis
 
 -- MODEL
 
@@ -26,7 +26,6 @@ type RoundStatus
     = Jeopardy
     | DoubleJeopardy
     | FinalJeopardy
-    | Total
 
 type alias Model =
     { answers: Dict Int AnswerStatus
