@@ -26,6 +26,7 @@ type AnswerStatus
 type RoundStatus
     = Jeopardy
     | DoubleJeopardy
+    | TripleJeopardy
     | FinalJeopardy
 
 
@@ -37,7 +38,7 @@ type alias Model =
 
 initModel : Model
 initModel =
-    Model (Dict.fromList <| List.map (\e -> pair e Unread) <| List.range 1 61) Jeopardy
+    Model (Dict.fromList <| List.map (\e -> pair e Unread) <| List.range 1 91) Jeopardy
 
 
 
@@ -117,8 +118,11 @@ showRound m =
             else if m.round == DoubleJeopardy then
                 List.drop 30 (Dict.toList m.answers) |> List.take 30
 
+            else if m.round == TripleJeopardy then
+                List.drop 60 (Dict.toList m.answers) |> List.take 30
+
             else
-                List.drop 60 (Dict.toList m.answers)
+                List.drop 90 (Dict.toList m.answers)
     in
     div
         [ style "display" "grid"
@@ -135,15 +139,21 @@ getAnswerCount model a r =
             if r == Jeopardy then
                 31
 
-            else
+            else if r == DoubleJeopardy then
                 61
+
+            else
+                91
 
         roundStatusMin =
             if r == Jeopardy then
                 0
 
-            else
+            else if r == DoubleJeopardy then
                 30
+
+            else
+                60
     in
     model
         |> Dict.toList
@@ -153,16 +163,6 @@ getAnswerCount model a r =
         |> List.filter (\e -> e == a)
         |> List.length
         |> String.fromInt
-
-
-getRedZoneCorrectCount : Dict Int AnswerStatus -> Int
-getRedZoneCorrectCount model =
-    model
-        |> Dict.toList
-        |> List.filter (\e -> first e > 12)
-        |> List.map second
-        |> List.filter (\e -> e == Correct)
-        |> List.length
 
 
 getNumberStyleList : AnswerStatus -> List (Html.Attribute msg)
@@ -183,6 +183,9 @@ showCurrentRoundName r =
             else if r == DoubleJeopardy then
                 " - Round: Double Jeopardy!"
 
+            else if r == TripleJeopardy then
+                " - Round: Triple Jeopardy!"
+
             else
                 " - Round: Final Jeopardy!"
     in
@@ -196,10 +199,11 @@ getVerbiageStyleList =
     ]
 
 
-sumJandDj : String.String -> String.String -> String.String
-sumJandDj j dj =
+sumJandDj : String.String -> String.String -> String.String -> String.String
+sumJandDj j dj tj =
     (String.toInt j |> Maybe.withDefault 0)
         + (String.toInt dj |> Maybe.withDefault 0)
+        + (String.toInt tj |> Maybe.withDefault 0)
         |> String.fromInt
 
 
@@ -212,8 +216,11 @@ newStats answers =
         djcorrect =
             getAnswerCount answers Correct DoubleJeopardy
 
+        tjcorrect =
+            getAnswerCount answers Correct TripleJeopardy
+
         totalcorrect =
-            sumJandDj jcorrect djcorrect
+            sumJandDj jcorrect djcorrect tjcorrect
 
         jwrong =
             getAnswerCount answers Incorrect Jeopardy
@@ -221,8 +228,11 @@ newStats answers =
         djwrong =
             getAnswerCount answers Incorrect DoubleJeopardy
 
+        tjwrong =
+            getAnswerCount answers Incorrect TripleJeopardy
+
         totalwrong =
-            sumJandDj jwrong djwrong
+            sumJandDj jwrong djwrong tjwrong
 
         junread =
             getAnswerCount answers Unread Jeopardy
@@ -230,17 +240,21 @@ newStats answers =
         djunread =
             getAnswerCount answers Unread DoubleJeopardy
 
+        tjunread =
+            getAnswerCount answers Unread TripleJeopardy
+
         totalunread =
-            sumJandDj junread djunread
+            sumJandDj junread djunread tjunread
     in
     table
         [ style "text-align" "center"
         , style "width" "100%"
         ]
         [ tr []
-            [ th [ style "width" "33%" ] [ text "J!" ]
-            , th [ style "width" "33%" ] [ text "DJ!" ]
-            , th [ style "width" "33%" ] [ text "Total" ]
+            [ th [ style "width" "25%" ] [ text "J!" ]
+            , th [ style "width" "25%" ] [ text "DJ!" ]
+            , th [ style "width" "25%" ] [ text "TJ!" ]
+            , th [ style "width" "25%" ] [ text "Total" ]
             ]
         , tr []
             [ td [ style "padding-top" "30px", colspan 3 ] [ text "Correct" ]
@@ -248,6 +262,7 @@ newStats answers =
         , tr []
             [ td (getNumberStyleList Correct) [ text jcorrect ]
             , td (getNumberStyleList Correct) [ text djcorrect ]
+            , td (getNumberStyleList Correct) [ text tjcorrect ]
             , td (getNumberStyleList Correct) [ text totalcorrect ]
             ]
         , tr []
@@ -256,6 +271,7 @@ newStats answers =
         , tr []
             [ td (getNumberStyleList Incorrect) [ text jwrong ]
             , td (getNumberStyleList Incorrect) [ text djwrong ]
+            , td (getNumberStyleList Incorrect) [ text tjwrong ]
             , td (getNumberStyleList Incorrect) [ text totalwrong ]
             ]
         , tr []
@@ -264,6 +280,7 @@ newStats answers =
         , tr []
             [ td (getNumberStyleList Unread) [ text junread ]
             , td (getNumberStyleList Unread) [ text djunread ]
+            , td (getNumberStyleList Unread) [ text tjunread ]
             , td (getNumberStyleList Unread) [ text totalunread ]
             ]
         ]
@@ -293,6 +310,8 @@ view model =
                     [ button [ onClick (SetRound Jeopardy) ] [ text "Jeopardy!" ]
                     , Html.text " "
                     , button [ onClick (SetRound DoubleJeopardy) ] [ text "Double Jeopardy!" ]
+                    , Html.text " "
+                    , button [ onClick (SetRound TripleJeopardy) ] [ text "Triple Jeopardy!" ]
                     , Html.text " "
                     , button [ onClick (SetRound FinalJeopardy) ] [ text "Final Jeopardy!" ]
                     , showCurrentRoundName model.round
