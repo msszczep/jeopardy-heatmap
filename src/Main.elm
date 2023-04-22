@@ -9,10 +9,11 @@ import Html.Events exposing (onClick)
 import String exposing (fromInt)
 import Tuple exposing (first, pair, second)
 
+
+
 -- TODO:
 -- * Track Daily Doubles
 -- * Toggle Triple Jeopardy round
-
 -- MODEL
 
 
@@ -130,42 +131,59 @@ showRound m =
         ]
         (List.map makeRectangle answersToUse)
 
+
 convertAnswerToEmoji : ( Int, AnswerStatus ) -> Html.Html Msg
 convertAnswerToEmoji t =
-  let
-    b = second t
-  in
-    case b of
-        Unread -> text <| "🟦"
-        Correct -> text <|  "🟩"
-        Incorrect -> text <| "🟥"
-
-makeEmojiHtmlTable answers = 
     let
-      row1 = List.take 6 answers
-      row2 = List.drop 6 answers |> List.take 6
-      row3 = List.drop 12 answers |> List.take 6
-      row4 = List.drop 18 answers |> List.take 6
-      row5 = List.drop 24 answers
+        b =
+            second t
     in
-    table [] [
-      tr [] [
-        td [] (List.map convertAnswerToEmoji row1)
-      ] ,
-      tr [] [
-        td [] (List.map convertAnswerToEmoji row2)
-      ] ,
-      tr [] [
-        td [] (List.map convertAnswerToEmoji row3)
-      ] ,
-      tr [] [
-        td [] (List.map convertAnswerToEmoji row4)
-      ] ,
-      tr [] [
-        td [] (List.map convertAnswerToEmoji row5)
-      ] 
-    ]
-    
+    case b of
+        Unread ->
+            text <| "🟦"
+
+        Correct ->
+            text <| "🟩"
+
+        Incorrect ->
+            text <| "🟥"
+
+
+makeEmojiHtmlTable answers =
+    let
+        row1 =
+            List.take 6 answers
+
+        row2 =
+            List.drop 6 answers |> List.take 6
+
+        row3 =
+            List.drop 12 answers |> List.take 6
+
+        row4 =
+            List.drop 18 answers |> List.take 6
+
+        row5 =
+            List.drop 24 answers
+    in
+    table []
+        [ tr []
+            [ td [] (List.map convertAnswerToEmoji row1)
+            ]
+        , tr []
+            [ td [] (List.map convertAnswerToEmoji row2)
+            ]
+        , tr []
+            [ td [] (List.map convertAnswerToEmoji row3)
+            ]
+        , tr []
+            [ td [] (List.map convertAnswerToEmoji row4)
+            ]
+        , tr []
+            [ td [] (List.map convertAnswerToEmoji row5)
+            ]
+        ]
+
 
 getAnswerCount : Dict Int AnswerStatus -> AnswerStatus -> RoundStatus -> String.String
 getAnswerCount model a r =
@@ -281,11 +299,14 @@ newStats answers =
         totalunread =
             sumJandDj junread djunread tjunread
 
-        janswers = Dict.toList answers |> List.take 30
+        janswers =
+            Dict.toList answers |> List.take 30
 
-        djanswers = Dict.toList answers |> List.drop 30 |> List.take 30
+        djanswers =
+            Dict.toList answers |> List.drop 30 |> List.take 30
 
-        fjanswer = Dict.toList answers |> List.drop 90 |> List.head |> Maybe.withDefault (0, Unread)
+        fjanswer =
+            Dict.toList answers |> List.drop 90 |> List.head |> Maybe.withDefault ( 0, Unread )
     in
     table
         [ style "text-align" "center"
@@ -324,12 +345,12 @@ newStats answers =
             , td (getNumberStyleList Unread) [ text tjunread ]
             , td (getNumberStyleList Unread) [ text totalunread ]
             ]
-        , tr [] 
-           [ td [ style "padding-top" "20px", colspan 4 ] [makeEmojiHtmlTable janswers] ]
-        , tr [] 
-           [ td [ style "padding-top" "20px", colspan 4 ] [makeEmojiHtmlTable djanswers] ]
-        , tr [] 
-           [ td [ style "padding-top" "20px" ] [convertAnswerToEmoji fjanswer] ]
+        , tr []
+            [ td [ style "padding-top" "20px", colspan 4 ] [ makeEmojiHtmlTable janswers ] ]
+        , tr []
+            [ td [ style "padding-top" "20px", colspan 4 ] [ makeEmojiHtmlTable djanswers ] ]
+        , tr []
+            [ td [ style "padding-top" "20px" ] [ convertAnswerToEmoji fjanswer ] ]
         ]
 
 
