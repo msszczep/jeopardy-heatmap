@@ -72,7 +72,9 @@ update msg model =
         SetRound r ->
             { model | round = r }
 
-        ToggleTripleJeopardy -> { model | activatetj = not model.activatetj }
+        ToggleTripleJeopardy ->
+            { model | activatetj = not model.activatetj }
+
 
 
 -- VIEW
@@ -299,8 +301,9 @@ newStats activatetj answers =
             getAnswerCount answers Unread TripleJeopardy
 
         totalunread =
-            if  activatetj == True then
+            if activatetj == True then
                 sumJandDj junread djunread tjunread
+
             else
                 sumJandDj junread djunread "0"
 
@@ -312,60 +315,69 @@ newStats activatetj answers =
 
         fjanswer =
             Dict.toList answers |> List.drop 90 |> List.head |> Maybe.withDefault ( 0, Unread )
-    
-        statsheaders = 
+
+        statsheaders =
             if activatetj == True then
-              
-            [ th [ style "width" "25%" ] [ text "J!" ]
-            , th [ style "width" "25%" ] [ text "DJ!" ]
-            , th [ style "width" "25%" ] [ text "TJ!" ]
-            , th [ style "width" "25%" ] [ text "Total" ]
-            ]
+                [ th [ style "width" "25%" ] [ text "J!" ]
+                , th [ style "width" "25%" ] [ text "DJ!" ]
+                , th [ style "width" "25%" ] [ text "TJ!" ]
+                , th [ style "width" "25%" ] [ text "Total" ]
+                ]
+
             else
-            [ th [ style "width" "33%" ] [ text "J!" ]
-            , th [ style "width" "33%" ] [ text "DJ!" ]
-            , th [ style "width" "34%" ] [ text "Total" ]
-            ]
+                [ th [ style "width" "33%" ] [ text "J!" ]
+                , th [ style "width" "33%" ] [ text "DJ!" ]
+                , th [ style "width" "34%" ] [ text "Total" ]
+                ]
 
-        colspantouse = if activatetj == True then 4 else 3
+        colspantouse =
+            if activatetj == True then
+                4
 
-        correctrow = if activatetj == True then 
-            [ td (getNumberStyleList Correct) [ text jcorrect ]
-            , td (getNumberStyleList Correct) [ text djcorrect ]
-            , td (getNumberStyleList Correct) [ text tjcorrect ]
-            , td (getNumberStyleList Correct) [ text totalcorrect ]
-            ]
-         else
-            [ td (getNumberStyleList Correct) [ text jcorrect ]
-            , td (getNumberStyleList Correct) [ text djcorrect ]
-            , td (getNumberStyleList Correct) [ text totalcorrect ]
-            ]
+            else
+                3
 
-        incorrectrow = if activatetj == True then 
-            [ td (getNumberStyleList Incorrect) [ text jwrong ]
-            , td (getNumberStyleList Incorrect) [ text djwrong ]
-            , td (getNumberStyleList Incorrect) [ text tjwrong ]
-            , td (getNumberStyleList Incorrect) [ text totalwrong ]
-            ]
-         else
-            [ td (getNumberStyleList Incorrect) [ text jwrong ]
-            , td (getNumberStyleList Incorrect) [ text djwrong ]
-            , td (getNumberStyleList Incorrect) [ text totalwrong ]
-            ]
+        correctrow =
+            if activatetj == True then
+                [ td (getNumberStyleList Correct) [ text jcorrect ]
+                , td (getNumberStyleList Correct) [ text djcorrect ]
+                , td (getNumberStyleList Correct) [ text tjcorrect ]
+                , td (getNumberStyleList Correct) [ text totalcorrect ]
+                ]
 
-         
-        totalrow = if activatetj == True then
-            [ td (getNumberStyleList Unread) [ text junread ]
-            , td (getNumberStyleList Unread) [ text djunread ]
-            , td (getNumberStyleList Unread) [ text tjunread ]
-            , td (getNumberStyleList Unread) [ text totalunread ]
-            ]
-          else
-            [ td (getNumberStyleList Unread) [ text junread ]
-            , td (getNumberStyleList Unread) [ text djunread ]            
-            , td (getNumberStyleList Unread) [ text totalunread ]
-            ]
+            else
+                [ td (getNumberStyleList Correct) [ text jcorrect ]
+                , td (getNumberStyleList Correct) [ text djcorrect ]
+                , td (getNumberStyleList Correct) [ text totalcorrect ]
+                ]
 
+        incorrectrow =
+            if activatetj == True then
+                [ td (getNumberStyleList Incorrect) [ text jwrong ]
+                , td (getNumberStyleList Incorrect) [ text djwrong ]
+                , td (getNumberStyleList Incorrect) [ text tjwrong ]
+                , td (getNumberStyleList Incorrect) [ text totalwrong ]
+                ]
+
+            else
+                [ td (getNumberStyleList Incorrect) [ text jwrong ]
+                , td (getNumberStyleList Incorrect) [ text djwrong ]
+                , td (getNumberStyleList Incorrect) [ text totalwrong ]
+                ]
+
+        totalrow =
+            if activatetj == True then
+                [ td (getNumberStyleList Unread) [ text junread ]
+                , td (getNumberStyleList Unread) [ text djunread ]
+                , td (getNumberStyleList Unread) [ text tjunread ]
+                , td (getNumberStyleList Unread) [ text totalunread ]
+                ]
+
+            else
+                [ td (getNumberStyleList Unread) [ text junread ]
+                , td (getNumberStyleList Unread) [ text djunread ]
+                , td (getNumberStyleList Unread) [ text totalunread ]
+                ]
     in
     table
         [ style "text-align" "center"
@@ -400,11 +412,12 @@ newStats activatetj answers =
 view : Model -> Html.Html Msg
 view model =
     let
-        tjbutton = 
-           if model.activatetj == True then 
-             button [ onClick (SetRound TripleJeopardy) ] [ text "Triple Jeopardy!" ]
-           else 
-             span [] []
+        tjbutton =
+            if model.activatetj == True then
+                button [ onClick (SetRound TripleJeopardy) ] [ text "Triple Jeopardy!" ]
+
+            else
+                span [] []
     in
     div [ style "padding" "10px" ]
         [ h3 [] [ text "Jeopardy! Heatmap" ]
@@ -433,7 +446,7 @@ view model =
                     , Html.text " "
                     , button [ onClick (SetRound FinalJeopardy) ] [ text "Final Jeopardy!" ]
                     , showCurrentRoundName model.round
-                    , input [type_ "checkbox", onClick ToggleTripleJeopardy ] [ text "Activate Triple J!" ]
+                    , input [ type_ "checkbox", onClick ToggleTripleJeopardy ] [ text "Activate Triple J!" ]
                     , showRound model
                     ]
                 ]
