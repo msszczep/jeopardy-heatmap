@@ -422,7 +422,7 @@ view model =
     div [ style "padding" "10px" ]
         [ h3 [] [ text "Jeopardy! Heatmap" ]
         , p [ style "font-size" "14px" ]
-            [ text "This is a no-frills scoreboard to track an individual's response rate for a Jeopardy! game.  Simply click \"Yes\" for a given answer if you're correct; click \"No\" otherwise.  The color of each square is updated to reflect its response status, and your tally is tracked below as you update.  To reset the entire game, simply refresh the page.  "
+            [ text "This is a no-frills scoreboard to track an individual's response rate for a Jeopardy! game.  Simply click \"Yes\" for a given answer if you're correct; click \"No\" otherwise.  The color of each square is updated to reflect its response status, and your tally is tracked below as you update.  The entire game status is also made available as an emoji set, suitable for copying and sharing on social media.  To reset the entire game, simply refresh the page.  "
             , a [ href "https://github.com/msszczep/jeopardy-heatmap/" ] [ text "Source code is here." ]
             ]
         , table []
