@@ -1,4 +1,5 @@
 compile:
+	rm jeopardyheatmap.html
 	elm make --optimize --output=jeopardyheatmap.html src/Main.elm
 
 format:

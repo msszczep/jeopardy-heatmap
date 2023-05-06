@@ -188,6 +188,22 @@ makeEmojiHtmlTable answers =
             ]
         ]
 
+makeEmojiTableScoreHelper : List (Int, AnswerStatus) -> String
+makeEmojiTableScoreHelper answers =
+  answers 
+    |> List.map second 
+    |> List.filter (\e -> e == Correct) 
+    |> List.length 
+    |> String.fromInt 
+
+makeEmojiTableScore : List ( Int, AnswerStatus ) -> List ( Int, AnswerStatus ) -> ( Int, AnswerStatus ) -> Html.Html msg
+makeEmojiTableScore janswers djanswers fjanswer =
+  let
+    jc = makeEmojiTableScoreHelper janswers
+    dc = makeEmojiTableScoreHelper djanswers
+    fc = makeEmojiTableScoreHelper [fjanswer]
+  in
+  tr [] [ td [] [text <| "( " ++ jc ++ " / " ++ dc ++ " / " ++ fc ++ " )" ]]
 
 getAnswerCount : Dict Int AnswerStatus -> AnswerStatus -> RoundStatus -> String.String
 getAnswerCount model a r =
@@ -400,6 +416,8 @@ newStats activatetj answers =
             ]
         , tr []
             totalrow
+        , tr []
+            [ td [ style "padding-top" "20px", colspan colspantouse ] [ makeEmojiTableScore janswers djanswers fjanswer ] ]
         , tr []
             [ td [ style "padding-top" "20px", colspan colspantouse ] [ makeEmojiHtmlTable janswers ] ]
         , tr []
