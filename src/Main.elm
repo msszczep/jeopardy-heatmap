@@ -198,7 +198,7 @@ makeEmojiTableScoreHelper answers =
         |> String.fromInt
 
 
-makeEmojiTableScore : List ( Int, AnswerStatus ) -> List ( Int, AnswerStatus ) -> List (Int, AnswerStatus) -> ( Int, AnswerStatus ) -> Bool -> Html.Html msg
+makeEmojiTableScore : List ( Int, AnswerStatus ) -> List ( Int, AnswerStatus ) -> List ( Int, AnswerStatus ) -> ( Int, AnswerStatus ) -> Bool -> Html.Html msg
 makeEmojiTableScore janswers djanswers tjanswers fjanswer activatetj =
     let
         jc =
@@ -207,15 +207,18 @@ makeEmojiTableScore janswers djanswers tjanswers fjanswer activatetj =
         dc =
             makeEmojiTableScoreHelper djanswers
 
-        tc = makeEmojiTableScoreHelper tjanswers
+        tc =
+            makeEmojiTableScoreHelper tjanswers
 
         fc =
             makeEmojiTableScoreHelper [ fjanswer ]
-        finalstring = 
+
+        finalstring =
             if activatetj then
-              "( " ++ jc ++ " / " ++ dc ++ " / " ++ tc ++ " / " ++ fc ++ " )"
+                "( " ++ jc ++ " / " ++ dc ++ " / " ++ tc ++ " / " ++ fc ++ " )"
+
             else
-              "( " ++ jc ++ " / " ++ dc ++ " / " ++ fc ++ " )"
+                "( " ++ jc ++ " / " ++ dc ++ " / " ++ fc ++ " )"
     in
     tr [] [ td [] [ text <| finalstring ] ]
 
@@ -412,9 +415,11 @@ newStats activatetj answers =
                 , td (getNumberStyleList Unread) [ text djunread ]
                 , td (getNumberStyleList Unread) [ text totalunread ]
                 ]
+
         tjrow =
             if activatetj == True then
-              tr [] [ td [ style "padding-top" "20px", colspan colspantouse ] [ makeEmojiHtmlTable tjanswers ] ]
+                tr [] [ td [ style "padding-top" "20px", colspan colspantouse ] [ makeEmojiHtmlTable tjanswers ] ]
+
             else
                 span [] []
     in
