@@ -198,8 +198,8 @@ makeEmojiTableScoreHelper answers =
         |> String.fromInt
 
 
-makeEmojiTableScore : List ( Int, AnswerStatus ) -> List ( Int, AnswerStatus ) -> ( Int, AnswerStatus ) -> Html.Html msg
-makeEmojiTableScore janswers djanswers fjanswer =
+makeEmojiTableScore : List ( Int, AnswerStatus ) -> List ( Int, AnswerStatus ) -> List (Int, AnswerStatus) -> ( Int, AnswerStatus ) -> Bool -> Html.Html msg
+makeEmojiTableScore janswers djanswers tjanswers fjanswer activatetj =
     let
         jc =
             makeEmojiTableScoreHelper janswers
@@ -207,10 +207,17 @@ makeEmojiTableScore janswers djanswers fjanswer =
         dc =
             makeEmojiTableScoreHelper djanswers
 
+        tc = makeEmojiTableScoreHelper tjanswers
+
         fc =
             makeEmojiTableScoreHelper [ fjanswer ]
+        finalstring = 
+            if activatetj then
+              "( " ++ jc ++ " / " ++ dc ++ " / " ++ tc ++ " / " ++ fc ++ " )"
+            else
+              "( " ++ jc ++ " / " ++ dc ++ " / " ++ fc ++ " )"
     in
-    tr [] [ td [] [ text <| "( " ++ jc ++ " / " ++ dc ++ " / " ++ fc ++ " )" ] ]
+    tr [] [ td [] [ text <| finalstring ] ]
 
 
 getAnswerCount : Dict Int AnswerStatus -> AnswerStatus -> RoundStatus -> String.String
@@ -337,6 +344,9 @@ newStats activatetj answers =
         djanswers =
             Dict.toList answers |> List.drop 30 |> List.take 30
 
+        tjanswers =
+            Dict.toList answers |> List.drop 60 |> List.take 30
+
         fjanswer =
             Dict.toList answers |> List.drop 90 |> List.head |> Maybe.withDefault ( 0, Unread )
 
@@ -402,6 +412,11 @@ newStats activatetj answers =
                 , td (getNumberStyleList Unread) [ text djunread ]
                 , td (getNumberStyleList Unread) [ text totalunread ]
                 ]
+        tjrow =
+            if activatetj == True then
+              tr [] [ td [ style "padding-top" "20px", colspan colspantouse ] [ makeEmojiHtmlTable tjanswers ] ]
+            else
+                span [] []
     in
     table
         [ style "text-align" "center"
@@ -425,11 +440,12 @@ newStats activatetj answers =
         , tr []
             totalrow
         , tr []
-            [ td [ style "padding-top" "20px", colspan colspantouse ] [ makeEmojiTableScore janswers djanswers fjanswer ] ]
+            [ td [ style "padding-top" "20px", colspan colspantouse ] [ makeEmojiTableScore janswers djanswers tjanswers fjanswer activatetj ] ]
         , tr []
             [ td [ style "padding-top" "20px", colspan colspantouse ] [ makeEmojiHtmlTable janswers ] ]
         , tr []
             [ td [ style "padding-top" "20px", colspan colspantouse ] [ makeEmojiHtmlTable djanswers ] ]
+        , tjrow
         , tr []
             [ td [ style "padding-top" "20px" ] [ convertAnswerToEmoji fjanswer ] ]
         ]
