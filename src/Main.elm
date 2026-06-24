@@ -9,7 +9,10 @@ import Html.Events exposing (onClick)
 import String exposing (fromInt)
 import Tuple exposing (first, pair, second)
 
+
+
 -- MODEL
+
 
 type AnswerStatus
     = Unread
@@ -101,18 +104,34 @@ getColor s =
 makeRectangle : RoundStatus -> ( Int, Answer ) -> Html.Html Msg
 makeRectangle currentRound answer =
     let
-        answerData = second answer
+        answerData =
+            second answer
+
         ddCheckbox =
             if currentRound == Jeopardy || currentRound == DoubleJeopardy || currentRound == TripleJeopardy then
                 [ br [] []
                 , button [ onClick (ToggleDailyDouble <| first answer) ] [ text "DD" ]
                 ]
+
             else
                 []
-        
+
         ddLabel =
             if answerData.dailyDouble then
-                [ div [ style "font-size" "32px", style "font-weight" "bold", style "color" (if answerData.status == Correct then "black" else "white") ] [ text "DD" ] ]
+                [ div
+                    [ style "font-size" "32px"
+                    , style "font-weight" "bold"
+                    , style "color"
+                        (if answerData.status == Correct then
+                            "black"
+
+                         else
+                            "white"
+                        )
+                    ]
+                    [ text "DD" ]
+                ]
+
             else
                 []
     in
@@ -127,11 +146,14 @@ makeRectangle currentRound answer =
         , style "position" "relative"
         ]
         ([ button [ onClick (SetCorrect <| first answer) ] [ text "Yes" ]
-        , Html.text " "
-        , button [ onClick (SetIncorrect <| first answer) ] [ text "No" ]
-        , Html.text " "
-        , button [ onClick (SetUnread <| first answer) ] [ text "Reset" ]
-        ] ++ ddCheckbox ++ ddLabel)
+         , Html.text " "
+         , button [ onClick (SetIncorrect <| first answer) ] [ text "No" ]
+         , Html.text " "
+         , button [ onClick (SetUnread <| first answer) ] [ text "Reset" ]
+         ]
+            ++ ddCheckbox
+            ++ ddLabel
+        )
 
 
 showRound : Model -> Html.Html Msg
@@ -469,16 +491,28 @@ view model =
     let
         tjbutton =
             if model.activatetj == True then
-                div 
+                div
                     [ onClick (SetRound TripleJeopardy)
-                    , class (if model.round == TripleJeopardy then "active" else "")
+                    , class
+                        (if model.round == TripleJeopardy then
+                            "active"
+
+                         else
+                            ""
+                        )
                     , style "display" "inline-block"
                     , style "padding" "10px"
                     , style "margin" "5px"
                     , style "border" "2px solid black"
                     , style "cursor" "pointer"
-                    , style "background-color" (if model.round == TripleJeopardy then "#d0d0d0" else "#ffffff")
-                    ] 
+                    , style "background-color"
+                        (if model.round == TripleJeopardy then
+                            "#d0d0d0"
+
+                         else
+                            "#ffffff"
+                        )
+                    ]
                     [ text "Triple Jeopardy!" ]
 
             else
@@ -504,50 +538,86 @@ view model =
                     ]
                 , td [ style "width" "80%" ]
                     [ div [ style "display" "inline-block" ]
-                        [ div 
+                        [ div
                             [ onClick (SetRound Jeopardy)
-                            , class (if model.round == Jeopardy then "active" else "")
+                            , class
+                                (if model.round == Jeopardy then
+                                    "active"
+
+                                 else
+                                    ""
+                                )
                             , style "display" "inline-block"
                             , style "padding" "10px"
                             , style "margin" "5px"
                             , style "border" "2px solid black"
                             , style "cursor" "pointer"
-                            , style "background-color" (if model.round == Jeopardy then "#d0d0d0" else "#ffffff")
-                            ] 
+                            , style "background-color"
+                                (if model.round == Jeopardy then
+                                    "#d0d0d0"
+
+                                 else
+                                    "#ffffff"
+                                )
+                            ]
                             [ text "Jeopardy!" ]
-                        , div 
+                        , div
                             [ onClick (SetRound DoubleJeopardy)
-                            , class (if model.round == DoubleJeopardy then "active" else "")
+                            , class
+                                (if model.round == DoubleJeopardy then
+                                    "active"
+
+                                 else
+                                    ""
+                                )
                             , style "display" "inline-block"
                             , style "padding" "10px"
                             , style "margin" "5px"
                             , style "border" "2px solid black"
                             , style "cursor" "pointer"
-                            , style "background-color" (if model.round == DoubleJeopardy then "#d0d0d0" else "#ffffff")
-                            ] 
+                            , style "background-color"
+                                (if model.round == DoubleJeopardy then
+                                    "#d0d0d0"
+
+                                 else
+                                    "#ffffff"
+                                )
+                            ]
                             [ text "Double Jeopardy!" ]
                         , tjbutton
-                        , div 
+                        , div
                             [ onClick (SetRound FinalJeopardy)
-                            , class (if model.round == FinalJeopardy then "active" else "")
+                            , class
+                                (if model.round == FinalJeopardy then
+                                    "active"
+
+                                 else
+                                    ""
+                                )
                             , style "display" "inline-block"
                             , style "padding" "10px"
                             , style "margin" "5px"
                             , style "border" "2px solid black"
                             , style "cursor" "pointer"
-                            , style "background-color" (if model.round == FinalJeopardy then "#d0d0d0" else "#ffffff")
-                            ] 
+                            , style "background-color"
+                                (if model.round == FinalJeopardy then
+                                    "#d0d0d0"
+
+                                 else
+                                    "#ffffff"
+                                )
+                            ]
                             [ text "Final Jeopardy!" ]
                         ]
                     , showRound model
-                    , div 
+                    , div
                         [ style "padding" "15px"
                         , style "margin-top" "20px"
                         , style "border" "2px solid #0066cc"
                         , style "background-color" "#e6f2ff"
                         , style "border-radius" "8px"
                         ]
-                        [ div [ style "font-weight" "bold", style "font-size" "16px", style "margin-bottom" "8px" ] 
+                        [ div [ style "font-weight" "bold", style "font-size" "16px", style "margin-bottom" "8px" ]
                             [ text "Optional Game Mode" ]
                         , div []
                             [ input [ type_ "checkbox", onClick ToggleTripleJeopardy ] []
