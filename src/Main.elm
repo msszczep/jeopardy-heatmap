@@ -4,17 +4,12 @@ import Browser
 import Debug exposing (toString)
 import Dict exposing (Dict)
 import Html exposing (a, b, br, button, div, h3, input, p, span, table, td, text, th, tr)
-import Html.Attributes exposing (colspan, href, style, type_)
+import Html.Attributes exposing (class, colspan, href, style, type_)
 import Html.Events exposing (onClick)
 import String exposing (fromInt)
 import Tuple exposing (first, pair, second)
 
-
-
--- TODO:
--- * Track Daily Doubles
 -- MODEL
-
 
 type AnswerStatus
     = Unread
@@ -29,8 +24,14 @@ type RoundStatus
     | FinalJeopardy
 
 
+type alias Answer =
+    { status : AnswerStatus
+    , dailyDouble : Bool
+    }
+
+
 type alias Model =
-    { answers : Dict Int AnswerStatus
+    { answers : Dict Int Answer
     , round : RoundStatus
     , activatetj : Bool
     }
@@ -38,7 +39,7 @@ type alias Model =
 
 initModel : Model
 initModel =
-    Model (Dict.fromList <| List.map (\e -> pair e Unread) <| List.range 1 91) Jeopardy False
+    Model (Dict.fromList <| List.map (\e -> pair e (Answer Unread False)) <| List.range 1 91) Jeopardy False
 
 
 
@@ -51,13 +52,14 @@ type Msg
     | SetUnread Int
     | SetRound RoundStatus
     | ToggleTripleJeopardy
+    | ToggleDailyDouble Int
 
 
 update : Msg -> Model -> Model
 update msg model =
     let
         applyUpdate n a m =
-            { model | answers = Dict.update n (Maybe.map (\x -> a)) m.answers }
+            { model | answers = Dict.update n (Maybe.map (\x -> { x | status = a })) m.answers }
     in
     case msg of
         SetCorrect n ->
@@ -74,6 +76,9 @@ update msg model =
 
         ToggleTripleJeopardy ->
             { model | activatetj = not model.activatetj }
+
+        ToggleDailyDouble n ->
+            { model | answers = Dict.update n (Maybe.map (\x -> { x | dailyDouble = not x.dailyDouble })) model.answers }
 
 
 
@@ -93,23 +98,40 @@ getColor s =
             "red"
 
 
-makeRectangle : ( Int, AnswerStatus ) -> Html.Html Msg
-makeRectangle answer =
+makeRectangle : RoundStatus -> ( Int, Answer ) -> Html.Html Msg
+makeRectangle currentRound answer =
+    let
+        answerData = second answer
+        ddCheckbox =
+            if currentRound == Jeopardy || currentRound == DoubleJeopardy || currentRound == TripleJeopardy then
+                [ br [] []
+                , button [ onClick (ToggleDailyDouble <| first answer) ] [ text "DD" ]
+                ]
+            else
+                []
+        
+        ddLabel =
+            if answerData.dailyDouble then
+                [ div [ style "font-size" "32px", style "font-weight" "bold", style "color" (if answerData.status == Correct then "black" else "white") ] [ text "DD" ] ]
+            else
+                []
+    in
     div
         [ style "width" "140px"
         , style "height" "100px"
         , style "margin-top" "10px"
         , style "padding-top" "5px"
         , style "padding-left" "5px"
-        , style "background-color" (getColor (second answer))
+        , style "background-color" (getColor answerData.status)
         , style "border" "2px solid black"
+        , style "position" "relative"
         ]
-        [ button [ onClick (SetCorrect <| first answer) ] [ text "Yes" ]
+        ([ button [ onClick (SetCorrect <| first answer) ] [ text "Yes" ]
         , Html.text " "
         , button [ onClick (SetIncorrect <| first answer) ] [ text "No" ]
         , Html.text " "
         , button [ onClick (SetUnread <| first answer) ] [ text "Reset" ]
-        ]
+        ] ++ ddCheckbox ++ ddLabel)
 
 
 showRound : Model -> Html.Html Msg
@@ -133,16 +155,16 @@ showRound m =
         , style "grid-template-columns" "auto auto auto auto auto auto"
         , style "padding" "10px"
         ]
-        (List.map makeRectangle answersToUse)
+        (List.map (makeRectangle m.round) answersToUse)
 
 
-convertAnswerToEmoji : ( Int, AnswerStatus ) -> Html.Html Msg
+convertAnswerToEmoji : ( Int, Answer ) -> Html.Html Msg
 convertAnswerToEmoji t =
     let
         b =
             second t
     in
-    case b of
+    case b.status of
         Unread ->
             text <| "⬛"
 
@@ -189,16 +211,16 @@ makeEmojiHtmlTable answers =
         ]
 
 
-makeEmojiTableScoreHelper : List ( Int, AnswerStatus ) -> String
+makeEmojiTableScoreHelper : List ( Int, Answer ) -> String
 makeEmojiTableScoreHelper answers =
     answers
         |> List.map second
-        |> List.filter (\e -> e == Correct)
+        |> List.filter (\e -> e.status == Correct)
         |> List.length
         |> String.fromInt
 
 
-makeEmojiTableScore : List ( Int, AnswerStatus ) -> List ( Int, AnswerStatus ) -> List ( Int, AnswerStatus ) -> ( Int, AnswerStatus ) -> Bool -> Html.Html msg
+makeEmojiTableScore : List ( Int, Answer ) -> List ( Int, Answer ) -> List ( Int, Answer ) -> ( Int, Answer ) -> Bool -> Html.Html msg
 makeEmojiTableScore janswers djanswers tjanswers fjanswer activatetj =
     let
         jc =
@@ -223,7 +245,7 @@ makeEmojiTableScore janswers djanswers tjanswers fjanswer activatetj =
     tr [] [ td [] [ text <| finalstring ] ]
 
 
-getAnswerCount : Dict Int AnswerStatus -> AnswerStatus -> RoundStatus -> String.String
+getAnswerCount : Dict Int Answer -> AnswerStatus -> RoundStatus -> String.String
 getAnswerCount model a r =
     let
         roundStatusMax =
@@ -251,7 +273,7 @@ getAnswerCount model a r =
         |> List.filter (\e -> first e < roundStatusMax)
         |> List.filter (\e -> first e > roundStatusMin)
         |> List.map second
-        |> List.filter (\e -> e == a)
+        |> List.filter (\e -> e.status == a)
         |> List.length
         |> String.fromInt
 
@@ -266,21 +288,7 @@ getNumberStyleList a =
 
 showCurrentRoundName : RoundStatus -> Html.Html msg
 showCurrentRoundName r =
-    let
-        t =
-            if r == Jeopardy then
-                " - Round: Jeopardy!"
-
-            else if r == DoubleJeopardy then
-                " - Round: Double Jeopardy!"
-
-            else if r == TripleJeopardy then
-                " - Round: Triple Jeopardy!"
-
-            else
-                " - Round: Final Jeopardy!"
-    in
-    b [] [ text t ]
+    span [] []
 
 
 getVerbiageStyleList : List (Html.Attribute msg)
@@ -298,7 +306,7 @@ sumJandDj j dj tj =
         |> String.fromInt
 
 
-newStats : Bool -> Dict Int AnswerStatus -> Html.Html Msg
+newStats : Bool -> Dict Int Answer -> Html.Html Msg
 newStats activatetj answers =
     let
         jcorrect =
@@ -351,7 +359,7 @@ newStats activatetj answers =
             Dict.toList answers |> List.drop 60 |> List.take 30
 
         fjanswer =
-            Dict.toList answers |> List.drop 90 |> List.head |> Maybe.withDefault ( 0, Unread )
+            Dict.toList answers |> List.drop 90 |> List.head |> Maybe.withDefault ( 0, Answer Unread False )
 
         statsheaders =
             if activatetj == True then
@@ -461,7 +469,17 @@ view model =
     let
         tjbutton =
             if model.activatetj == True then
-                button [ onClick (SetRound TripleJeopardy) ] [ text "Triple Jeopardy!" ]
+                div 
+                    [ onClick (SetRound TripleJeopardy)
+                    , class (if model.round == TripleJeopardy then "active" else "")
+                    , style "display" "inline-block"
+                    , style "padding" "10px"
+                    , style "margin" "5px"
+                    , style "border" "2px solid black"
+                    , style "cursor" "pointer"
+                    , style "background-color" (if model.round == TripleJeopardy then "#d0d0d0" else "#ffffff")
+                    ] 
+                    [ text "Triple Jeopardy!" ]
 
             else
                 span [] []
@@ -485,16 +503,59 @@ view model =
                         [ newStats model.activatetj model.answers ]
                     ]
                 , td [ style "width" "80%" ]
-                    [ button [ onClick (SetRound Jeopardy) ] [ text "Jeopardy!" ]
-                    , Html.text " "
-                    , button [ onClick (SetRound DoubleJeopardy) ] [ text "Double Jeopardy!" ]
-                    , Html.text " "
-                    , tjbutton
-                    , Html.text " "
-                    , button [ onClick (SetRound FinalJeopardy) ] [ text "Final Jeopardy!" ]
-                    , showCurrentRoundName model.round
-                    , input [ type_ "checkbox", onClick ToggleTripleJeopardy ] [ text "Activate Triple J!" ]
+                    [ div [ style "display" "inline-block" ]
+                        [ div 
+                            [ onClick (SetRound Jeopardy)
+                            , class (if model.round == Jeopardy then "active" else "")
+                            , style "display" "inline-block"
+                            , style "padding" "10px"
+                            , style "margin" "5px"
+                            , style "border" "2px solid black"
+                            , style "cursor" "pointer"
+                            , style "background-color" (if model.round == Jeopardy then "#d0d0d0" else "#ffffff")
+                            ] 
+                            [ text "Jeopardy!" ]
+                        , div 
+                            [ onClick (SetRound DoubleJeopardy)
+                            , class (if model.round == DoubleJeopardy then "active" else "")
+                            , style "display" "inline-block"
+                            , style "padding" "10px"
+                            , style "margin" "5px"
+                            , style "border" "2px solid black"
+                            , style "cursor" "pointer"
+                            , style "background-color" (if model.round == DoubleJeopardy then "#d0d0d0" else "#ffffff")
+                            ] 
+                            [ text "Double Jeopardy!" ]
+                        , tjbutton
+                        , div 
+                            [ onClick (SetRound FinalJeopardy)
+                            , class (if model.round == FinalJeopardy then "active" else "")
+                            , style "display" "inline-block"
+                            , style "padding" "10px"
+                            , style "margin" "5px"
+                            , style "border" "2px solid black"
+                            , style "cursor" "pointer"
+                            , style "background-color" (if model.round == FinalJeopardy then "#d0d0d0" else "#ffffff")
+                            ] 
+                            [ text "Final Jeopardy!" ]
+                        ]
                     , showRound model
+                    , div 
+                        [ style "padding" "15px"
+                        , style "margin-top" "20px"
+                        , style "border" "2px solid #0066cc"
+                        , style "background-color" "#e6f2ff"
+                        , style "border-radius" "8px"
+                        ]
+                        [ div [ style "font-weight" "bold", style "font-size" "16px", style "margin-bottom" "8px" ] 
+                            [ text "Optional Game Mode" ]
+                        , div []
+                            [ input [ type_ "checkbox", onClick ToggleTripleJeopardy ] []
+                            , text " Enable Triple Jeopardy Round"
+                            ]
+                        , div [ style "font-size" "12px", style "margin-top" "5px", style "color" "#555" ]
+                            [ text "This adds a third full round of 30 questions between Double Jeopardy and Final Jeopardy, expanding the game board." ]
+                        ]
                     ]
                 ]
             ]
