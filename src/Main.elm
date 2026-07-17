@@ -277,8 +277,11 @@ getAnswerCount model a r =
             else if r == DoubleJeopardy then
                 61
 
-            else
+            else if r == TripleJeopardy then
                 91
+
+            else
+                92
 
         roundStatusMin =
             if r == Jeopardy then
@@ -287,8 +290,11 @@ getAnswerCount model a r =
             else if r == DoubleJeopardy then
                 30
 
-            else
+            else if r == TripleJeopardy then
                 60
+
+            else
+                90
     in
     model
         |> Dict.toList
@@ -320,11 +326,12 @@ getVerbiageStyleList =
     ]
 
 
-sumJandDj : String.String -> String.String -> String.String -> String.String
-sumJandDj j dj tj =
+sumJandDj : String.String -> String.String -> String.String -> String.String -> String.String
+sumJandDj j dj tj fj =
     (String.toInt j |> Maybe.withDefault 0)
         + (String.toInt dj |> Maybe.withDefault 0)
         + (String.toInt tj |> Maybe.withDefault 0)
+        + (String.toInt fj |> Maybe.withDefault 0)
         |> String.fromInt
 
 
@@ -340,8 +347,11 @@ newStats activatetj answers =
         tjcorrect =
             getAnswerCount answers Correct TripleJeopardy
 
+        fjcorrect =
+            getAnswerCount answers Correct FinalJeopardy
+
         totalcorrect =
-            sumJandDj jcorrect djcorrect tjcorrect
+            sumJandDj jcorrect djcorrect tjcorrect fjcorrect
 
         jwrong =
             getAnswerCount answers Incorrect Jeopardy
@@ -352,8 +362,11 @@ newStats activatetj answers =
         tjwrong =
             getAnswerCount answers Incorrect TripleJeopardy
 
+        fjwrong =
+            getAnswerCount answers Incorrect FinalJeopardy
+
         totalwrong =
-            sumJandDj jwrong djwrong tjwrong
+            sumJandDj jwrong djwrong tjwrong fjwrong
 
         junread =
             getAnswerCount answers Unread Jeopardy
@@ -364,12 +377,15 @@ newStats activatetj answers =
         tjunread =
             getAnswerCount answers Unread TripleJeopardy
 
+        fjunread =
+            getAnswerCount answers Unread FinalJeopardy
+
         totalunread =
             if activatetj == True then
-                sumJandDj junread djunread tjunread
+                sumJandDj junread djunread tjunread fjunread
 
             else
-                sumJandDj junread djunread "0"
+                sumJandDj junread djunread "0" fjunread
 
         janswers =
             Dict.toList answers |> List.take 30
@@ -385,36 +401,40 @@ newStats activatetj answers =
 
         statsheaders =
             if activatetj == True then
-                [ th [ style "width" "25%" ] [ text "J!" ]
-                , th [ style "width" "25%" ] [ text "DJ!" ]
-                , th [ style "width" "25%" ] [ text "TJ!" ]
-                , th [ style "width" "25%" ] [ text "Total" ]
+                [ th [ style "width" "20%" ] [ text "J!" ]
+                , th [ style "width" "20%" ] [ text "DJ!" ]
+                , th [ style "width" "20%" ] [ text "TJ!" ]
+                , th [ style "width" "20%" ] [ text "FJ!" ]
+                , th [ style "width" "20%" ] [ text "Total" ]
                 ]
 
             else
-                [ th [ style "width" "33%" ] [ text "J!" ]
-                , th [ style "width" "33%" ] [ text "DJ!" ]
-                , th [ style "width" "34%" ] [ text "Total" ]
+                [ th [ style "width" "25%" ] [ text "J!" ]
+                , th [ style "width" "25%" ] [ text "DJ!" ]
+                , th [ style "width" "25%" ] [ text "FJ!" ]
+                , th [ style "width" "25%" ] [ text "Total" ]
                 ]
 
         colspantouse =
             if activatetj == True then
-                4
+                5
 
             else
-                3
+                4
 
         correctrow =
             if activatetj == True then
                 [ td (getNumberStyleList Correct) [ text jcorrect ]
                 , td (getNumberStyleList Correct) [ text djcorrect ]
                 , td (getNumberStyleList Correct) [ text tjcorrect ]
+                , td (getNumberStyleList Correct) [ text fjcorrect ]
                 , td (getNumberStyleList Correct) [ text totalcorrect ]
                 ]
 
             else
                 [ td (getNumberStyleList Correct) [ text jcorrect ]
                 , td (getNumberStyleList Correct) [ text djcorrect ]
+                , td (getNumberStyleList Correct) [ text fjcorrect ]
                 , td (getNumberStyleList Correct) [ text totalcorrect ]
                 ]
 
@@ -423,12 +443,14 @@ newStats activatetj answers =
                 [ td (getNumberStyleList Incorrect) [ text jwrong ]
                 , td (getNumberStyleList Incorrect) [ text djwrong ]
                 , td (getNumberStyleList Incorrect) [ text tjwrong ]
+                , td (getNumberStyleList Incorrect) [ text fjwrong ]
                 , td (getNumberStyleList Incorrect) [ text totalwrong ]
                 ]
 
             else
                 [ td (getNumberStyleList Incorrect) [ text jwrong ]
                 , td (getNumberStyleList Incorrect) [ text djwrong ]
+                , td (getNumberStyleList Incorrect) [ text fjwrong ]
                 , td (getNumberStyleList Incorrect) [ text totalwrong ]
                 ]
 
@@ -437,12 +459,14 @@ newStats activatetj answers =
                 [ td (getNumberStyleList Unread) [ text junread ]
                 , td (getNumberStyleList Unread) [ text djunread ]
                 , td (getNumberStyleList Unread) [ text tjunread ]
+                , td (getNumberStyleList Unread) [ text fjunread ]
                 , td (getNumberStyleList Unread) [ text totalunread ]
                 ]
 
             else
                 [ td (getNumberStyleList Unread) [ text junread ]
                 , td (getNumberStyleList Unread) [ text djunread ]
+                , td (getNumberStyleList Unread) [ text fjunread ]
                 , td (getNumberStyleList Unread) [ text totalunread ]
                 ]
 
