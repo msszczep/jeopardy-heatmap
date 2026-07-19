@@ -641,9 +641,7 @@ view model =
                         , style "background-color" "#e6f2ff"
                         , style "border-radius" "8px"
                         ]
-                        [ div [ style "font-weight" "bold", style "font-size" "16px", style "margin-bottom" "8px" ]
-                            [ text "Optional Game Mode" ]
-                        , div []
+                        [ div []
                             [ input [ type_ "checkbox", onClick ToggleTripleJeopardy ] []
                             , text " Enable Triple Jeopardy Round"
                             ]
